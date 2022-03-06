@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  service:
+    image: python:3.9-alpine
+    working_dir: /usr/src/honeypot
+    volumes:
+      - ./src:/usr/src/honeypot
+    command: ["python", "-u", "main.py", "-a", "0.0.0.0", "-p", "8080"]
+    ports:
+     - "8080:8080"
+
+  master:
+    image: locustio/locust
+    ports:
+     - "8089:8089"
+    volumes:
+      - ./locust:/mnt/locust
+    command: -f /mnt/locust/locustfile.py --master -H http://service:8080 -s 120 -u 100 -r 5
+
+  worker:
+    image: locustio/locust
+    volumes:
+      - ./locust:/mnt/locust
+    command: -f /mnt/locust/locustfile.py --worker --master-host master
